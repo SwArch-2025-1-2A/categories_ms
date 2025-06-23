@@ -5,5 +5,7 @@ description = "Categories microservice for the MeetUN app. Used by events, group
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "dotenv>=0.9.9",
     "fastapi>=0.115.13",
+    "uvicorn>=0.34.3",
 ]
