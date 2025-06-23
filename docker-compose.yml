@@ -13,7 +13,7 @@ services:
     environment:
       #`DATABASE_URL` is constructed from the `mu_categories_db` variables, like this:
       #   postgresql://{user}:{password}@{hostname}:{port}/{db}?sslmode=disable
-      - DATABASE_URL: postgresql://${mu_categories_db_USER:-postgres}:{mu_categories_db_PASSWORD:-meetUN}@${mu_categories_db_HOSTNAME:-mu_categories_db}:${mu_categories_db_EXPOSED_PORT:-5432}/${mu_categories_db_DB:-categories}?sslmode=disable
+      DATABASE_URL: postgresql://${mu_categories_db_USER:-postgres}:{mu_categories_db_PASSWORD:-meetUN}@${mu_categories_db_HOSTNAME:-mu_categories_db}:${mu_categories_db_EXPOSED_PORT:-5432}/${mu_categories_db_DB:-categories}?sslmode=disable
 
     # Ports that will be exposed to the host machine
     ports:
@@ -28,13 +28,22 @@ services:
     # Hostname from which the service will be reachable
     hostname: ${mu_categories_db_HOSTNAME:-mu_categories_db}
 
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-categories}"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
     # Ports exposed to OTHER SERVICES but NOT the HOST machine
-    expose: ${mu_categories_db_EXPOSED_PORT:-5432}
+    expose: 
+      - ${mu_categories_db_EXPOSED_PORT:-5432}
 
     environment:
-      - POSTGRES_USER: ${mu_categories_db_USER:-postgres}
-      - POSTGRES_PASSWORD: ${mu_categories_db_PASSWORD:-meetUN}
-      - POSTGRES_DB: ${mu_categories_db_DB:-categories}
+      POSTGRES_USER: ${mu_categories_db_USER:-postgres}
+      POSTGRES_PASSWORD: ${mu_categories_db_PASSWORD:-meetUN}
+      POSTGRES_DB: ${mu_categories_db_DB:-categories}
 
     volumes:
       - mu-categories-db-data:/var/lib/postgresql/data
