@@ -1,4 +1,4 @@
-FROM ghcr.io/astral-sh/uv:0.7.12-python3.13-alpine AS builder
+FROM ghcr.io/astral-sh/uv:0.7.12-python3.12-alpine AS builder
 
 # This is just so `stdout` and `stderr` are unbuffered by default
 # https://docs.python.org/3/using/cmdline.html#envvar-PYTHONUNBUFFERED
@@ -30,7 +30,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Then, use a final image without uv
 # It is important to use the image that matches the builder, as the path to the
 # Python executable must be the same
-FROM python:3.13-alpine
+FROM python:3.12-alpine
 
 # This is just so `stdout` and `stderr` are unbuffered by default
 # https://docs.python.org/3/using/cmdline.html#envvar-PYTHONUNBUFFERED
