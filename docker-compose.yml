@@ -13,7 +13,7 @@ services:
     environment:
       #`DATABASE_URL` is constructed from the `mu_categories_db` variables, like this:
       #   postgresql://{user}:{password}@{hostname}:{port}/{db}?sslmode=disable
-      DATABASE_URL: postgresql://${mu_categories_db_USER:-postgres}:{mu_categories_db_PASSWORD:-meetUN}@${mu_categories_db_HOSTNAME:-mu_categories_db}:${mu_categories_db_EXPOSED_PORT:-5432}/${mu_categories_db_DB:-categories}?sslmode=disable
+      DATABASE_URL: postgresql://${mu_categories_db_USER:-postgres}:${mu_categories_db_PASSWORD:-meetUN}@${mu_categories_db_HOSTNAME:-mu_categories_db}:${mu_categories_db_EXPOSED_PORT:-5432}/${mu_categories_db_DB:-categories}?sslmode=disable
 
     # Ports that will be exposed to the host machine
     ports:
@@ -29,11 +29,12 @@ services:
     hostname: ${mu_categories_db_HOSTNAME:-mu_categories_db}
 
     restart: always
+
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-categories}"]
-      interval: 10s
-      retries: 5
-      start_period: 30s
+      interval: 1s # Check every second if it is already up
+      retries: 10 
+      start_period: 2s  # Leave two seconds for startup. I think for an almost empty DB with such a small schema it is appropriate
       timeout: 10s
 
     # Ports exposed to OTHER SERVICES but NOT the HOST machine
