@@ -1,0 +1,9 @@
+[project]
+name = "categories-ms"
+version = "0.1.0"
+description = "Categories microservice for the MeetUN app. Used by events, groups and users"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.13",
+]
