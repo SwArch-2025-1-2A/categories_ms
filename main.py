@@ -1,6 +1,7 @@
 from os import getenv
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from app.db import init_db
 
 # Load environment variables from .env file
 load_dotenv()
@@ -18,11 +19,15 @@ app = FastAPI(
 # 2. Add the actual routes here
 # 3. Setup and test the PORT env variable properly
 # 4. Look into the lifespan context manager, to check if it is necessary or not
+# 5. Change the @app.on_event (which is currently deprecated) for something that isn't
 
 @app.get("/ping")
 async def ping():
     return "Pong"
 
+@app.on_event("startup")
+def on_startup():
+    init_db()
 
 if __name__ == "__main__":
     import uvicorn
