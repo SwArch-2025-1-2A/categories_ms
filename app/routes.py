@@ -2,7 +2,7 @@ import uuid
 from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import Session
 from app.models import Category
-from app.crud import get_category_by_id, create_category
+from app.crud import get_category_by_id, create_category, delete_category_by_id
 from app.db import engine
 from typing import Annotated
 
@@ -28,3 +28,8 @@ def post_category(session: SessionDep, category_name: str) -> Category | None:
     category = create_category(session=session, category_in=category_name)
     return category
     
+@router.delete("/{id}")
+def delete_category(session: SessionDep, id: uuid.UUID) -> None:
+    found = delete_category_by_id(session=session, id=id)
+    if not found:
+        raise HTTPException(status_code=404, detail="Category not found")
