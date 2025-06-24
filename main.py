@@ -2,6 +2,7 @@ from os import getenv
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from app.db import init_db
+from app.routes import router
 
 # Load environment variables from .env file
 load_dotenv()
@@ -24,6 +25,8 @@ app = FastAPI(
 @app.get("/ping")
 async def ping():
     return "Pong"
+
+app.include_router(router)
 
 @app.on_event("startup")
 def on_startup():
