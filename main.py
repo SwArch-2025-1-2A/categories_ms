@@ -17,10 +17,9 @@ app = FastAPI(
 
 # TODO: 
 # 1. Setup CORS middleware
-# 2. Add the actual routes here
-# 3. Setup and test the PORT env variable properly
-# 4. Look into the lifespan context manager, to check if it is necessary or not
-# 5. Change the @app.on_event (which is currently deprecated) for something that isn't
+# 2. Setup and test the PORT env variable properly
+# 3. Look into the lifespan context manager, to check if it is necessary or not
+# 4. Change the @app.on_event (which is currently deprecated) for something that isn't
 
 @app.get("/ping")
 async def ping():

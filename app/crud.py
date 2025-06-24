@@ -3,9 +3,6 @@ from sqlmodel import Session, select
 from app.models import Category
 from datetime import datetime
 from typing import List
-# TODO: write the code for the following CRUD operations
-# 4. Get all the categories
-# 5. Update a category (takes as input the new "name")
 
 # category_in stands for category input. To create a category we only require a
 # single string, which is the category "name" or "description". No need for custom models
