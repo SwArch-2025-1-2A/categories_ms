@@ -2,6 +2,7 @@ import uuid
 from sqlmodel import Session, select
 from app.models import Category
 from datetime import datetime
+from typing import List
 # TODO: write the code for the following CRUD operations
 # 4. Get all the categories
 # 5. Update a category (takes as input the new "name")
@@ -31,3 +32,20 @@ def delete_category_by_id(*, session: Session, id: uuid.UUID) -> bool:
     session.add(category)
     session.commit()
     return True
+
+def update_category_by_id(*, session: Session, id: uuid.UUID, new_name: str) -> Category | None:
+    category = get_category_by_id(session=session, id=id)
+    if category == None:
+        return None
+    category.category = new_name
+    category.updated_at = datetime.now()
+    session.add(category)
+    session.commit()
+    session.refresh(category)
+    return category
+
+def get_all_categories(*, session: Session) -> List[Category]:
+    # One could add pagination to this, but I don't think that we will have that many categories
+    statement = select(Category).where(Category.deleted_at == None)
+    categories = session.exec(statement)
+    return categories
