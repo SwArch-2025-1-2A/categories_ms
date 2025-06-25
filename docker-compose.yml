@@ -14,10 +14,11 @@ services:
       #`DATABASE_URL` is constructed from the `mu_categories_db` variables, like this:
       #   postgresql://{user}:{password}@{hostname}:{port}/{db}?sslmode=disable
       DATABASE_URL: postgresql://${mu_categories_db_USER:-postgres}:${mu_categories_db_PASSWORD:-meetUN}@${mu_categories_db_HOSTNAME:-mu_categories_db}:${mu_categories_db_EXPOSED_PORT:-5432}/${mu_categories_db_DB:-categories}?sslmode=disable
+      PORT: ${mu_categories_ms_EXPOSED_PORT:-8001}
 
     # Ports that will be exposed to the host machine
     ports:
-      - ${mu_categories_ms_INTERNAL_PORT:-8000}:${mu_categories_ms_EXPOSED_PORT:-8000}
+      - ${mu_categories_ms_INTERNAL_PORT:-8001}:${mu_categories_ms_EXPOSED_PORT:-8001}
     
   
     restart: always
