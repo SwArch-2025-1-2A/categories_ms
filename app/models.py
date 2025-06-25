@@ -13,3 +13,9 @@ class Category(SQLModel, table=True):
     # Another valid approach would be to use the type Optional[datetime], but it seems to me that
     # datetime | None is more widely used
     deleted_at: datetime | None = Field(default=None, nullable=True)
+
+
+# Despite only holding a string, it is necessary to create this class to receive 
+# POST and PUT parameters in the request body
+class CategoryIn(SQLModel):
+    category: str
