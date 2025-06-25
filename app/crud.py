@@ -16,7 +16,7 @@ def create_category(*, session: Session, category_in: str) -> Category:
 def get_category_by_id(*, session: Session, id: uuid.UUID) -> Category | None:
     statement = select(Category).where(Category.id == id)
     session_category = session.exec(statement).first()
-    if session_category.deleted_at != None:
+    if session_category == None or session_category.deleted_at != None:
         return None
     return session_category
 
