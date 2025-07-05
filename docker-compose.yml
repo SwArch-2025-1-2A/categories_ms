@@ -1,74 +1,70 @@
-#--------------------------------------------------------------------------------------------------------------------------#
-#|                                                COMMON CONFIGURATIONS                                                   |#
-#--------------------------------------------------------------------------------------------------------------------------#
-# &mu-categories-ms-common-config is what's called an anchor in .yaml files. It lets us reuse everything that follows, so that 
-# setting up the dev and prod profiles is easier
-x-mu-categories-ms-common-config: &mu-categories-ms-common-config
-  build: .
-
-  # Hostname from which the service will be reachable
-  hostname: mu_categories_ms
-  container_name: mu_categories_ms
-
-  environment:
-    #`DATABASE_URL` is constructed like this:
-    #   postgresql://{user}:{password}@{database_hostname}:{database_port}/{db}?sslmode=disable
-    DATABASE_URL: postgresql://${mu_categories_db_USER:-postgres}:${mu_categories_db_PASSWORD:-meetUN}@mu_categories_db:5432/categories?sslmode=disable
-    PORT: "8001"
-
-  expose:
-    - "8001"
-  
-  restart: always
-
-
-x-mu-categories-db-common-config: &mu-categories-db-common-config
-  image: postgres:17-alpine
-
-  # Hostname from which the service will be reachable
-  hostname: mu_categories_db
-  container_name: mu_categories_db
-
-  restart: always
-
-  healthcheck:
-    test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d categories"]
-    interval: 1s # Check every second if it is already up
-    retries: 10 
-    start_period: 2s  # Leave two seconds for startup. I think for an almost empty DB with such a small schema it is appropriate
-    timeout: 10s
-
-  # Ports exposed to OTHER SERVICES but NOT the HOST machine
-  expose: 
-    - "5432"
-
-  environment:
-    POSTGRES_USER: ${mu_categories_db_USER:-postgres}
-    POSTGRES_PASSWORD: ${mu_categories_db_PASSWORD:-meetUN}
-    POSTGRES_DB: categories
-
-  volumes:
-    - mu-categories-db-data:/var/lib/postgresql/data
-
-
 services:
 #--------------------------------------------------------------------------------------------------------------------------#
 #|                                                PROFILES FOR PRODUCTION                                                 |#
 #--------------------------------------------------------------------------------------------------------------------------#
-# These profiles don't expose any ports to the host. The networks they are connected to are defined at the root of the
-# project in a Docker Compose override file
-  mu_categories_ms_prod: 
-    <<: *mu-categories-ms-common-config
+  # &common_ms is what's called an anchor in .yaml files. It lets us reuse everything that follows, so that setting up
+  # the profile for the dev microservice is easier
+  mu_categories_ms_prod: &common_categories_ms
     depends_on: 
       mu_categories_db_prod:
         condition: service_healthy 
+
     profiles:
       - prod
 
-  mu_categories_db_prod: 
-    <<: *mu-categories-db-common-config
+    build: .
+
+    # Hostname from which the service will be reachable
+    hostname: mu_categories_ms
+    container_name: mu_categories_ms
+
+    environment:
+      #`DATABASE_URL` is constructed like this:
+      #   postgresql://{user}:{password}@{database_hostname}:{database_port}/{db}?sslmode=disable
+      DATABASE_URL: postgresql://${mu_categories_db_USER:-postgres}:${mu_categories_db_PASSWORD:-meetUN}@mu_categories_db:5432/categories?sslmode=disable
+      PORT: "8001"
+
+    expose:
+      - "8001"
+    
+    restart: always
+
+    networks:
+      - private
+
+  mu_categories_db_prod: &common_categories_db
+    image: postgres:17-alpine
+
+    # Hostname from which the service will be reachable
+    hostname: mu_categories_db
+    container_name: mu_categories_db
+
+    restart: always
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d categories"]
+      interval: 1s # Check every second if it is already up
+      retries: 10 
+      start_period: 2s  # Leave two seconds for startup. I think for an almost empty DB with such a small schema it is appropriate
+      timeout: 10s
+
+    # Ports exposed to OTHER SERVICES but NOT the HOST machine
+    expose: 
+      - "5432"
+
+    environment:
+      POSTGRES_USER: ${mu_categories_db_USER:-postgres}
+      POSTGRES_PASSWORD: ${mu_categories_db_PASSWORD:-meetUN}
+      POSTGRES_DB: categories
+
+    volumes:
+      - mu-categories-db-data:/var/lib/postgresql/data
+
     profiles:
       - prod
+
+    networks:
+      - private
 
 
 #--------------------------------------------------------------------------------------------------------------------------#
@@ -76,21 +72,29 @@ services:
 #--------------------------------------------------------------------------------------------------------------------------#
   # Categories microservice for development (connected to the default network and exposing its ports to the host)
   mu_categories_ms_dev:
-    <<: *mu-categories-ms-common-config
+    # This is what in yaml files is called an alias and a merge. It takes everything pointed to by common_categories_ms and merges it
+    # so that we don't have to rewrite it. We can add or override things too
+    <<: *common_categories_ms
+
     profiles:
       - dev
+
     depends_on:
       mu_categories_db_dev:
         condition: service_healthy
+
     ports:
       - "8001:8001"
+
     networks:
       - default
 
   mu_categories_db_dev:
-    <<: *mu-categories-db-common-config
+    <<: *common_categories_db
+
     profiles:
       - dev
+
     networks:
       - default
 
