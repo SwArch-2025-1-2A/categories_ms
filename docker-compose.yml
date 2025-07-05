@@ -1,48 +1,42 @@
 services:
-#--------------------------------------------------------------------------------------------------------------------------#
-#|                                                PROFILES FOR PRODUCTION                                                 |#
-#--------------------------------------------------------------------------------------------------------------------------#
-  # &common_ms is what's called an anchor in .yaml files. It lets us reuse everything that follows, so that setting up
-  # the profile for the dev microservice is easier
-  mu_categories_ms_prod: &common_categories_ms
-    depends_on: 
-      mu_categories_db_prod:
-        condition: service_healthy 
-
-    profiles:
-      - prod
-
+  # Categories Microservice
+  mu_categories_ms:
     build: .
 
+    depends_on:
+      mu_categories_db:
+        condition: service_healthy 
+
     # Hostname from which the service will be reachable
-    hostname: mu_categories_ms
-    container_name: mu_categories_ms
+    hostname: ${mu_categories_ms_HOSTNAME:-mu_categories_ms}
+    
+    container_name: ${mu_categories_ms_HOSTNAME:-mu_categories_ms}
 
     environment:
-      #`DATABASE_URL` is constructed like this:
-      #   postgresql://{user}:{password}@{database_hostname}:{database_port}/{db}?sslmode=disable
-      DATABASE_URL: postgresql://${mu_categories_db_USER:-postgres}:${mu_categories_db_PASSWORD:-meetUN}@mu_categories_db:5432/categories?sslmode=disable
-      PORT: "8001"
+      #`DATABASE_URL` is constructed from the `mu_categories_db` variables, like this:
+      #   postgresql://{user}:{password}@{hostname}:{port}/{db}?sslmode=disable
+      DATABASE_URL: postgresql://${mu_categories_db_USER:-postgres}:${mu_categories_db_PASSWORD:-meetUN}@${mu_categories_db_HOSTNAME:-mu_categories_db}:${mu_categories_db_INTERNAL_PORT:-5432}/${mu_categories_db_DB:-categories}?sslmode=disable
+      PORT: ${mu_categories_ms_EXTERNAL_PORT:-8001}
 
-    expose:
-      - "8001"
+    # Ports that will be exposed to the host machine
+    ports:
+      - ${mu_categories_ms_EXTERNAL_PORT:-8001}:${mu_categories_ms_INTERNAL_PORT:-8001}
     
+  
     restart: always
 
-    networks:
-      - private
-
-  mu_categories_db_prod: &common_categories_db
+  mu_categories_db:
     image: postgres:17-alpine
 
     # Hostname from which the service will be reachable
-    hostname: mu_categories_db
-    container_name: mu_categories_db
+    hostname: ${mu_categories_db_HOSTNAME:-mu_categories_db}
+
+    container_name: ${mu_categories_db_HOSTNAME:-mu_categories_db}
 
     restart: always
 
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d categories"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-categories}"]
       interval: 1s # Check every second if it is already up
       retries: 10 
       start_period: 2s  # Leave two seconds for startup. I think for an almost empty DB with such a small schema it is appropriate
@@ -50,54 +44,16 @@ services:
 
     # Ports exposed to OTHER SERVICES but NOT the HOST machine
     expose: 
-      - "5432"
+      - ${mu_categories_db_INTERNAL_PORT:-5432}
 
     environment:
       POSTGRES_USER: ${mu_categories_db_USER:-postgres}
       POSTGRES_PASSWORD: ${mu_categories_db_PASSWORD:-meetUN}
-      POSTGRES_DB: categories
+      POSTGRES_DB: ${mu_categories_db_DB:-categories}
 
     volumes:
       - mu-categories-db-data:/var/lib/postgresql/data
 
-    profiles:
-      - prod
-
-    networks:
-      - private
-
-
-#--------------------------------------------------------------------------------------------------------------------------#
-#|                                                PROFILES FOR DEVELOPMENT                                                |#
-#--------------------------------------------------------------------------------------------------------------------------#
-  # Categories microservice for development (connected to the default network and exposing its ports to the host)
-  mu_categories_ms_dev:
-    # This is what in yaml files is called an alias and a merge. It takes everything pointed to by common_categories_ms and merges it
-    # so that we don't have to rewrite it. We can add or override things too
-    <<: *common_categories_ms
-
-    profiles:
-      - dev
-
-    depends_on:
-      mu_categories_db_dev:
-        condition: service_healthy
-
-    ports:
-      - "8001:8001"
-
-    networks:
-      - default
-
-  mu_categories_db_dev:
-    <<: *common_categories_db
-
-    profiles:
-      - dev
-
-    networks:
-      - default
-
-
 volumes:
   mu-categories-db-data: 
+
